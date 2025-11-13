@@ -1,0 +1,61 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.2.0-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # Web UI (http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: urystem
+      RABBITMQ_DEFAULT_PASS: admin123
+  # builder:
+  #   image: golang:1.24.4-alpine3.22
+  #   working_dir: /app
+  #   volumes:
+  #     - .:/app       # текущая папка хоста монтируется в /app
+  #   command: >
+  #     sh -c "CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w -extldflags \"-static\"' -o rss cmd/main.go"      
+  # rss:
+  #   build: 
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     POSTGRES_HOST: db
+  #   env_file:
+  #     - .env
+  #   entrypoint: ["/app/rss", "fetch"]
+  #   depends_on:
+  #     - migrate
+  # db:
+  #   image: postgres:alpine3.22
+  #   container_name: rss_db
+  #   ports:
+  #     - ${POSTGRES_PORT:-5432}:5432
+  #   # volumes:
+  #   #   - pgdata:/var/lib/postgresql/data
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-ukabdoll}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-07654321}
+  #     POSTGRES_DB: ${POSTGRES_DBNAME:-rss}
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ukabdoll} -d ${POSTGRES_DBNAME:-rss}" ]
+  #     interval: 3s
+  #     timeout: 5s
+  #     retries: 10
+
+  # migrate:
+  #   image: migrate/migrate
+  #   container_name: rss_migrate
+  #   volumes:
+  #     - ./internal/adapters/driven/storage/migrations:/migrations
+  #   entrypoint:
+  #     [
+  #       "migrate",
+  #       "-path",
+  #       "/migrations",
+  #       "-database",
+  #       "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DBNAME}?sslmode=disable",
+  #       "up"
+  #     ]
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy

@@ -1,0 +1,21 @@
+how to create rabbitMQ adapter in best practice
+
+Если Qos(1) — он будет ждать подтверждения каждого перед тем, как прислать следующее.
+Если Qos(10) — может “залить” тебе 10 подряд, пока ты их не подтвердил.
+
+for d := range msgs {
+    semaphore <- struct{}{} // забираем слот
+    go func(d amqp.Delivery) {
+        defer func() { <-semaphore }() // освобождаем слот
+        processOrder(d)
+        d.Ack(false)
+    }(d)
+}
+
+NotifyPublish -- 
+подтверждения мен керек
+
+slog json 
+и тексеру керек 
+config.yml
+докер кампос
