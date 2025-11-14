@@ -25,37 +25,37 @@ services:
   #   entrypoint: ["/app/rss", "fetch"]
   #   depends_on:
   #     - migrate
-  # db:
-  #   image: postgres:alpine3.22
-  #   container_name: rss_db
-  #   ports:
-  #     - ${POSTGRES_PORT:-5432}:5432
-  #   # volumes:
-  #   #   - pgdata:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_USER: ${POSTGRES_USER:-ukabdoll}
-  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-07654321}
-  #     POSTGRES_DB: ${POSTGRES_DBNAME:-rss}
-  #   healthcheck:
-  #     test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ukabdoll} -d ${POSTGRES_DBNAME:-rss}" ]
-  #     interval: 3s
-  #     timeout: 5s
-  #     retries: 10
+  db:
+    image: postgres:alpine3.22
+    container_name: rss_db
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    # volumes:
+    #   - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: restaurant_user
+      POSTGRES_PASSWORD: restaurant_pass
+      POSTGRES_DB: restaurant_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U restaurant_user -d restaurant_db" ]
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
-  # migrate:
-  #   image: migrate/migrate
-  #   container_name: rss_migrate
-  #   volumes:
-  #     - ./internal/adapters/driven/storage/migrations:/migrations
-  #   entrypoint:
-  #     [
-  #       "migrate",
-  #       "-path",
-  #       "/migrations",
-  #       "-database",
-  #       "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DBNAME}?sslmode=disable",
-  #       "up"
-  #     ]
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  migrate:
+    image: migrate/migrate
+    container_name: rss_migrate
+    volumes:
+      - ./migrations:/migrations
+    entrypoint:
+      [
+        "migrate",
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://restaurant_user:restaurant_pass@db:5432/restaurant_db?sslmode=disable",
+        "up"
+      ]
+    depends_on:
+      db:
+        condition: service_healthy

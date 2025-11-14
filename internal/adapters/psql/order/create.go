@@ -29,7 +29,7 @@ func (p *psql) CreateOrder(ctx context.Context, ord *domain.OrderPublish) error 
 	ord.OrderNumber = fmt.Sprintf("ORD_%s_%03d", myTime.Format("20060102"), san)
 	// Вставка заказа
 	const queryOrder = `
-		INSERT INTO orders (number, customer_name, order_type, priority, total_amount, table_number, delivery_address)
+		INSERT INTO orders (number, customer_name, type, priority, total_amount, table_number, delivery_address)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`
 

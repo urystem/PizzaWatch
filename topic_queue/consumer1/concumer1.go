@@ -38,9 +38,9 @@ func main() {
 	// Создаём очередь
 	q, err := ch.QueueDeclare(
 		"kitchen_dine_in_queue", // имя очереди
-		true,            // durable
-		false,           // autoDelete
-		false,           // exclusive
+		true,                    // durable
+		false,                   // autoDelete
+		false,                   // exclusive
 		false,
 		nil,
 	)

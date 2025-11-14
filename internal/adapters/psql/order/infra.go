@@ -27,7 +27,7 @@ func NewOrderDB(ctx context.Context, cfg config.CfgDBInter) (ports.OrderPsql, er
 	if err != nil {
 		return nil, err
 	}
-	return &psql{db}, nil
+	return &psql{db}, db.Ping(ctx)
 }
 
 func (pool *psql) CloseDB() {

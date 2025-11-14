@@ -16,11 +16,12 @@ import (
 )
 
 type rabbit struct {
+	logger    *slog.Logger
 	rabbit    *amqp091.Connection
 	connClose chan *amqp091.Error
-	orderCh   *amqp091.Channel
-	notifyCh  *amqp091.Channel
-	sem       chan struct{} //concurent
+	// mu        sync.Mutex
+	orderCh  *amqp091.Channel
+	notifyCh *amqp091.Channel
 	isClosed atomic.Bool
 }
 
@@ -29,55 +30,12 @@ const (
 	notificationExchange = "notifications_fanout"
 )
 
-func (r *rabbit) reconnectConn(url string) {
-	for {
-		<-r.connClose
-		for {
-			if r.isClosed.Load() {
-				return
-			}
-			slog.Error("try")
-			conn, err := amqp091.Dial(url)
-			if err != nil {
-				time.Sleep(3 * time.Second)
-				continue
-			}
-			// r.connClose = make(chan *amqp091.Error)
-			conn.NotifyClose(r.connClose)
-			r.rabbit = conn
-			break
-		}
-	}
-}
-
-func NewOrderRabbit(cfg config.CfgRabbitInter, maxConcurrent uint) (ports.OrderRabbit, error) {
+func NewOrderRabbit(cfg config.CfgRabbitInter, slogger *slog.Logger) (ports.OrderRabbit, error) {
 	dsn := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.GetUser(), cfg.GetPassword(), cfg.GetHostName(), cfg.GetDBPort())
-	conn, err := amqp091.Dial(dsn)
+	myRab := &rabbit{logger: slogger}
+	err := myRab.createChannel(dsn)
 	if err != nil {
 		return nil, err
-	}
-	ch1, err := conn.Channel()
-	if err != nil {
-		return nil, errors.Join(conn.Close(), err)
-	}
-	err = initKitchenQueue(ch1)
-	if err != nil {
-		return nil, errors.Join(ch1.Close(), conn.Close(), err)
-	}
-	ch2, err := conn.Channel()
-	if err != nil {
-		return nil, errors.Join(ch1.Close(), conn.Close(), err)
-	}
-
-	err = initNotifyEx(ch2)
-	if err != nil {
-		return nil, errors.Join(ch1.Close(), ch2.Close(), conn.Close(), err)
-	}
-	myRab := &rabbit{
-		rabbit:   conn,
-		orderCh:  ch1,
-		notifyCh: ch2,
-		sem:      make(chan struct{}, maxConcurrent),
 	}
 	go myRab.reconnectConn(dsn)
 	return myRab, nil
@@ -93,28 +51,20 @@ func (r *rabbit) PublishOrder(ctx context.Context, ord *domain.OrderPublish) err
 	if err != nil {
 		return err
 	}
-	select {
-	case <-time.After(5 * time.Second):
-		return fmt.Errorf("timeout")
-	case <-ctx.Done():
-		return ctx.Err()
-	case r.sem <- struct{}{}:
-		err := r.orderCh.PublishWithContext(
-			ctx,
-			orderExchange,
-			fmt.Sprintf("kitchen.%s.%d", ord.OrderType, ord.Priority),
-			false,
-			false,
-			amqp091.Publishing{
-				ContentType:  "application/json",
-				Body:         b,
-				Priority:     ord.Priority,
-				DeliveryMode: amqp091.Persistent, // 2 → persistent
-			},
-		)
-		<-r.sem
-		return err
-	}
+
+	return r.orderCh.PublishWithContext(
+		ctx,
+		orderExchange,
+		fmt.Sprintf("kitchen.%s.%d", ord.OrderType, ord.Priority),
+		false,
+		false,
+		amqp091.Publishing{
+			ContentType:  "application/json",
+			Body:         b,
+			Priority:     ord.Priority,
+			DeliveryMode: amqp091.Persistent, // 2 → persistent
+		},
+	)
 }
 
 func (r *rabbit) PublishNotify(ctx context.Context, ord *domain.OrderNotification) error {
@@ -134,3 +84,25 @@ func (r *rabbit) PublishNotify(ctx context.Context, ord *domain.OrderNotificatio
 		},
 	)
 }
+
+func (r *rabbit) reconnectConn(url string) {
+	for {
+		<-r.connClose
+		r.logger.Warn("rabbitMQ not working")
+		for {
+			if r.isClosed.Load() {
+				return
+			}
+			r.logger.Info("trying to connect to rabbitmq")
+			err := r.createChannel(url)
+			if err != nil {
+				time.Sleep(3 * time.Second)
+				continue
+			}
+			r.logger.Info("connected to rabbitmq")
+			break
+		}
+	}
+}
+
+

@@ -19,3 +19,6 @@ slog json
 и тексеру керек 
 config.yml
 докер кампос
+
+requestID
+order service give me by routing key

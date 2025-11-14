@@ -3,7 +3,7 @@ package order_service
 import (
 	"context"
 	"flag"
-	"log/slog"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,50 +12,67 @@ import (
 	server "pizza/internal/adapters/server/order"
 	"pizza/internal/config"
 	"pizza/internal/services"
+	"pizza/pkg"
 	"syscall"
+	"time"
 )
 
 func Main() {
+	logger := pkg.CustomSlog().With("service", "order-service")
 	port := flag.Uint("port", 3000, "The HTTP port for the API.")
 	maxCon := flag.Uint("max-concurrent", 50, "Maximum number of concurrent orders to process.")
-	// flag.Usage=
 	flag.Parse()
+	logger.Info(fmt.Sprintf("service starting on port %d", *port), "action", "start the service")
+
 	dbCfg, err := config.GetDBConfig()
 	if err != nil {
-		slog.Error("")
+		logger.Error("cannot get db config", "error", err)
 		return
 	}
+
 	rabbitCfg, err := config.GetRabbitMQConfig()
 	if err != nil {
-		slog.Error("")
+		logger.Error("cannot get rabbit config", "error", err)
 		return
 	}
+
+	start := time.Now()
 	db, err := psql.NewOrderDB(context.Background(), dbCfg)
 	if err != nil {
-		slog.Error("")
+		logger.Error("cannot connect to db", "error", err)
 		return
 	}
+	defer db.CloseDB()
+	logger.Info("Connected to PostgreSQL database", "action", "db_connected", "duration_ms", time.Since(start).Milliseconds())
 
-	rab, err := rabbit.NewOrderRabbit(rabbitCfg, *maxCon)
+	start = time.Now()
+	rab, err := rabbit.NewOrderRabbit(rabbitCfg, logger)
 	if err != nil {
-		slog.Error("")
+		logger.Error("cannot connect to rabbitMQ", "error", err)
 		return
 	}
-	service := services.NewOrderService(rab, db)
-	serv := server.NewServer(*port, service)
+	defer rab.CloseRabbit()
+	logger.Info("Connected to RabbitMQ exchange 'orders_topic'", "action", "rabbitmq_connected", "duration_ms", time.Since(start).Milliseconds())
 
+	service := services.NewOrderService(rab, db, *maxCon)
+	serv := server.NewServer(*port, service)
+	
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
 	go func() {
 		if err := serv.StartServer(); err != nil && err != http.ErrServerClosed {
-			slog.Error("❌", " Server error:", err)
+			logger.Error("❌", " Server error:", err)
 			quit <- syscall.SIGTERM
 		}
 	}()
+
 	<-quit
-	slog.Info("📦 Shutting down server...")
+
+	serv.ShutDownServer(context.Background())
+	logger.Info("📦 Shutting down server...")
 	if err := serv.ShutDownServer(context.Background()); err != nil {
-		slog.Error("❌", " Server forced to shutdown: %v", err)
+		logger.Error("❌", " Server forced to shutdown: %v", err)
 	}
-	slog.Info("✅ Server exited properly")
+	logger.Info("✅ Server exited properly")
 }

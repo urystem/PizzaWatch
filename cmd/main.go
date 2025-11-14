@@ -1,22 +1,33 @@
 package main
 
 import (
-	"flag"
+	"fmt"
+	"os"
+	"pizza/cmd/kitchen"
 	order "pizza/cmd/order"
+	"strings"
 )
 
 // import ""
 
 func main() {
-	mode := flag.String("mode", "", "select the mode")
-	flag.Parse()
-	switch *mode {
+	os.Args = os.Args[1:]
+	if len(os.Args) == 0 {
+		return
+	}
+	if len(os.Args) > 1 && (os.Args[0] == "--mode" || os.Args[0] == "-mode") {
+		os.Args = os.Args[1:]
+	} else if ind := strings.Index(os.Args[0], "="); ind != -1 && (os.Args[0][:ind] == "--mode" || os.Args[0][:ind] == "-mode") {
+		os.Args[0] = os.Args[0][ind+1:]
+	}
+	switch os.Args[0] {
 	case "order-service":
 		order.Main()
 	case "kitchen-worker":
+		kitchen.Main()
 	case "tracking-service":
 	case "notification-subscriber":
 	default:
-		flag.Usage()
+		fmt.Println(os.Args)
 	}
 }

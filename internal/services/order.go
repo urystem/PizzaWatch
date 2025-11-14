@@ -10,19 +10,30 @@ import (
 type order struct {
 	rabbit ports.OrderRabbit
 	db     ports.OrderPsql
+	sem    chan struct{} //concurent
+
 }
 
-func NewOrderService(rabbit ports.OrderRabbit, db ports.OrderPsql) ports.OrderUseCase {
+func NewOrderService(rabbit ports.OrderRabbit, db ports.OrderPsql, maxConcurrent uint) ports.OrderUseCase {
 	return &order{
 		db:     db,
 		rabbit: rabbit,
+		sem:    make(chan struct{}, maxConcurrent),
 	}
 }
 
 func (u *order) CreateOrder(ctx context.Context, ord *domain.Order) (*domain.OrderStatus, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case u.sem <- struct{}{}:
+		defer func() {
+			<-u.sem
+		}()
+	}
 	ordInsert := &domain.OrderPublish{Order: *ord}
 	for _, item := range ord.Items {
-		ordInsert.TotalAmount += item.Price
+		ordInsert.TotalAmount += item.Price * float64(item.Quantity)
 	}
 
 	if ordInsert.TotalAmount > 100 {
