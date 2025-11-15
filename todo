@@ -22,3 +22,5 @@ config.yml
 
 requestID
 order service give me by routing key
+
+splitseq

@@ -29,8 +29,12 @@ func flagger() error {
 	if *workerName == "" {
 		return fmt.Errorf("invalid name worker")
 	}
+
+	if *orderType == "" {
+		*orderType = "dinein,takeout,delivery"
+	}
 	orderTypesMap := make(map[string]struct{})
-	for _, v := range strings.Split(*orderType, ",") {
+	for v := range strings.SplitSeq(*orderType, ",") {
 		if v == "dinein" || v == "takeout" || v == "delivery" {
 			_, ok := orderTypesMap[v]
 			if ok {
@@ -80,8 +84,12 @@ func Main() {
 	defer rabbit.CloseRabbit()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	service := services.NewKitchenService(ctx, rabbit, db)
-
+	defer cancel()
+	service, err := services.NewKitchenService(ctx, logger, rabbit, db, *workerName, orderTypes)
+	if err != nil {
+		logger.Error("cannot create service", "error", err)
+		return
+	}
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -89,6 +97,10 @@ func Main() {
 	}()
 
 	<-quit
+	err = db.UpdateToOffline(ctx, *workerName)
+	if err != nil {
+		logger.Error("sql", "error", err)
+	}
 	cancel()
 	logger.Info("📦 Shutting down server...")
 	logger.Info("✅ Server exited properly")

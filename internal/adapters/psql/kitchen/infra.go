@@ -2,11 +2,13 @@ package kitchen
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"pizza/internal/config"
 	"pizza/internal/ports"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -34,26 +36,50 @@ func (p *psql) CloseDB() {
 	p.Close()
 }
 
-func (p *psql) CreateOrUpdateWorker(ctx context.Context, name string, types []string) error {
-	const query = `
+func (p *psql) CreateOrUpdateWorker(ctx context.Context, name string, types []string) ([]string, error) {
+	tx, err := p.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	var status string
+	err = tx.QueryRow(ctx,
+		`SELECT status FROM workers WHERE name = $1`,
+		name,
+	).Scan(&status)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	} else if status == "online" {
+		return nil, fmt.Errorf("already online")
+	}
+
+	const queryInsert = `
 	INSERT INTO workers 
 	(name, type) 
-	VALUES ($1, $2) 
-	ON CONFLICT (name) DO UPDATE 
-	SET 
-		type = EXCLUDED.type, 
-		status = 'online', 
-		last_seen = now() 
-	WHERE workers.status != 'online'`
+	VALUES ($1, $2);`
 
-	aff, err := p.Exec(ctx, query, name, strings.Join(types, ","))
+	if status == "" {
+		_, err = tx.Exec(ctx, queryInsert, name, strings.Join(types, ","))
+		if err != nil {
+			return nil, err
+		}
+		return types, tx.Commit(ctx)
+	}
+
+	const queryUpdate = `
+	UPDATE workers
+	SET status = 'online',
+    last_seen = now()
+	WHERE name = $1 AND status = 'offline'
+	RETURNING type;`
+
+	var returnedType string
+	err = p.QueryRow(ctx, queryUpdate, name).Scan(&returnedType)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if aff.RowsAffected() == 0 {
-		return fmt.Errorf("%s", "already online")
-	}
-	return nil
+	return strings.Split(returnedType, ","), tx.Commit(ctx)
 }
 
 func (p *psql) AddOrderProcessed(ctx context.Context, name string) error {
@@ -69,6 +95,25 @@ func (p *psql) AddOrderProcessed(ctx context.Context, name string) error {
 	}
 	if res.RowsAffected() == 0 {
 		return fmt.Errorf("%s", "worker not found or he is offline")
+	}
+	return nil
+}
+
+func (p *psql) UpdateToOffline(ctx context.Context, name string) error {
+	// Обновляем статус и last_seen
+	cmdTag, err := p.Exec(ctx, `
+        UPDATE workers
+        SET status = 'offline',
+            last_seen = NOW()
+        WHERE name = $1
+    `, name)
+	if err != nil {
+		return err
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		// Если ни одной строки не обновилось, значит такого worker нет
+		return fmt.Errorf("worker %s not found", name)
 	}
 	return nil
 }

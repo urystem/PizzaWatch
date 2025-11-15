@@ -42,6 +42,9 @@ func (r *rabbit) createChannel(dsn string, orderTypes []string, prefetch int) er
 func (r *rabbit) reconnectConn(url string, ords []string, prefetch int) {
 	for {
 		<-r.connClose
+		if r.isClosed.Load() {
+			return
+		}
 		r.logger.Warn("rabbitMQ not working")
 		for {
 			if r.isClosed.Load() {

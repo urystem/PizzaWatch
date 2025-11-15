@@ -7,7 +7,8 @@ import (
 
 type KitchenPsql interface {
 	CloseDB()
-	CreateOrUpdateWorker(ctx context.Context, name string, types []string) error
+	CreateOrUpdateWorker(ctx context.Context, name string, types []string) ([]string, error)
+	UpdateToOffline(ctx context.Context, name string) error
 	AddOrderProcessed(ctx context.Context, name string) error
 }
 

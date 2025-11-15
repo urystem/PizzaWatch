@@ -2,6 +2,7 @@ package kitchen
 
 import (
 	"encoding/json"
+	"fmt"
 	"pizza/internal/domain"
 	"pizza/internal/ports"
 
@@ -36,5 +37,6 @@ func (q *qat) Joi() error {
 }
 
 func (q *qat) Rastau() error {
+	defer fmt.Println("rautaldy")
 	return q.hat.Ack(false)
 }

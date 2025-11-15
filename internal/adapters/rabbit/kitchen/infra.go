@@ -40,5 +40,6 @@ func (r *rabbit) GiveChannel() <-chan ports.QatJoldama {
 }
 
 func (r *rabbit) CloseRabbit() error {
+	r.isClosed.Store(true)
 	return r.conn.Close()
 }

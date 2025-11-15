@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	orderExchange        = "orders_topic"
-	notificationExchange = "notifications_fanout"
+	orderExchange = "orders_topic"
+	// notificationExchange = "notifications_fanout"
 )
 
 var queueNames = map[string]string{
