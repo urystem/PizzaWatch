@@ -69,7 +69,6 @@ func Main() {
 
 	<-quit
 
-	serv.ShutDownServer(context.Background())
 	logger.Info("📦 Shutting down server...")
 	if err := serv.ShutDownServer(context.Background()); err != nil {
 		logger.Error("❌", " Server forced to shutdown: %v", err)

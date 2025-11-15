@@ -9,3 +9,4 @@ DROP TABLE IF EXISTS orders;
 -- Удаляем enum type order_status
 DROP TYPE IF EXISTS order_status;
 
+DROP TABLE IF EXISTS order_status_log;

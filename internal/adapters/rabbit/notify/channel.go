@@ -5,11 +5,11 @@ import (
 )
 
 func (r *rabbit) createChannel(url string) error {
-	var err error
-	r.conn, err = amqp091.Dial(url)
+	myConn, err := amqp091.Dial(url)
 	if err != nil {
 		return err
 	}
+	r.conn = myConn
 	r.connClose = make(chan *amqp091.Error)
 	r.conn.NotifyClose(r.connClose)
 	ch, err := r.conn.Channel()

@@ -8,11 +8,11 @@ import (
 )
 
 func (r *rabbit) createChannel(dsn string, orderTypes []string, prefetch int) error {
-	var err error
-	r.conn, err = amqp091.Dial(dsn)
+	myConn, err := amqp091.Dial(dsn)
 	if err != nil {
 		return err
 	}
+	r.conn = myConn
 	r.connClose = make(chan *amqp091.Error)
 	r.conn.NotifyClose(r.connClose)
 	orderCh, err := r.conn.Channel()

@@ -6,10 +6,9 @@ import (
 	"pizza/cmd/kitchen"
 	"pizza/cmd/notification"
 	order "pizza/cmd/order"
+	"pizza/cmd/tracking"
 	"strings"
 )
-
-// import ""
 
 func main() {
 	os.Args = os.Args[1:]
@@ -27,6 +26,7 @@ func main() {
 	case "kitchen-worker":
 		kitchen.Main()
 	case "tracking-service":
+		tracking.Main()
 	case "notification-subscriber":
 		notification.Main()
 	default:

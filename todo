@@ -24,3 +24,8 @@ requestID
 order service give me by routing key
 
 splitseq
+
+
+
+order_status_log
+

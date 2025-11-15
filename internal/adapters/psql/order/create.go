@@ -60,5 +60,14 @@ func (p *psql) CreateOrder(ctx context.Context, ord *domain.OrderPublish) error 
 			return err
 		}
 	}
+
+	// ✅ Логируем статус "received" в order_status_log
+	const queryStatusLog = `
+		INSERT INTO order_status_log (order_id, status, changed_by)
+		VALUES ($1, 'received', $2)`
+	_, err = tx.Exec(ctx, queryStatusLog, san, "order-service")
+	if err != nil {
+		return err
+	}
 	return tx.Commit(ctx)
 }
