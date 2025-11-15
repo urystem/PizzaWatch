@@ -57,7 +57,11 @@ func Main() {
 		os.Exit(1)
 	}
 	fmt.Println(*workerName, orderTypes, *heartbeat, *prefetch)
-
+	hostName, err := os.Hostname()
+	if err != nil {
+		logger.Error("cannot get host name")
+		return
+	}
 	dbcfg, err := config.GetDBConfig()
 	if err != nil {
 		logger.Error("cannot get db config", "error", err)
@@ -70,7 +74,7 @@ func Main() {
 		return
 	}
 
-	db, err := psql.NewOrderDB(context.Background(), dbcfg)
+	db, err := psql.NewOrderDB(context.Background(), logger, dbcfg)
 	if err != nil {
 		logger.Error("cannot connect to db", "error", err)
 		return
@@ -85,7 +89,7 @@ func Main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	service, err := services.NewKitchenService(ctx, logger, rabbit, db, *workerName, orderTypes)
+	service, err := services.NewKitchenService(ctx, logger, rabbit, db, *workerName, hostName, orderTypes)
 	if err != nil {
 		logger.Error("cannot create service", "error", err)
 		return

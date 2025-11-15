@@ -27,12 +27,23 @@ func (r *rabbit) createChannel(dsn string, orderTypes []string, prefetch int) er
 	if err != nil {
 		return errors.Join(r.conn.Close(), err)
 	}
-	// r.notifyCh, err = r.rabbit.Channel()
-	// if err != nil {
-	// 	return errors.Join(r.rabbit.Close(), err)
-	// }
 
-	// err = initNotifyEx(r.notifyCh)
+	r.notifyCh, err = r.conn.Channel()
+	if err != nil {
+		return errors.Join(r.conn.Close(), err)
+	}
+	err = r.notifyCh.ExchangeDeclare(
+		"notifications_fanout", // name
+		"fanout",               // type
+		true,                   // durable
+		false,                  // auto-deleted
+		false,                  // internal
+		false,                  // no-wait
+		nil,                    // arguments
+	)
+	if err != nil {
+		return err
+	}
 	// if err != nil {
 	// 	return errors.Join(r.rabbit.Close(), err)
 	// }

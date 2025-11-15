@@ -43,6 +43,7 @@ func NewOrderRabbit(cfg config.CfgRabbitInter, slogger *slog.Logger) (ports.Orde
 
 func (r *rabbit) CloseRabbit() error {
 	r.isClosed.Store(true)
+	defer r.logger.Info("rabbit closed")
 	return errors.Join(r.orderCh.Close(), r.notifyCh.Close(), r.rabbit.Close())
 }
 
@@ -104,5 +105,3 @@ func (r *rabbit) reconnectConn(url string) {
 		}
 	}
 }
-
-

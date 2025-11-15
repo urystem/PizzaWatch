@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"pizza/cmd/kitchen"
+	"pizza/cmd/notification"
 	order "pizza/cmd/order"
 	"strings"
 )
@@ -27,7 +28,8 @@ func main() {
 		kitchen.Main()
 	case "tracking-service":
 	case "notification-subscriber":
+		notification.Main()
 	default:
-		fmt.Println(os.Args)
+		fmt.Println(os.Args[0])
 	}
 }

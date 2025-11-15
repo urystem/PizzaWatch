@@ -1,9 +1,12 @@
 package kitchen
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"pizza/internal/config"
+	"pizza/internal/domain"
 	"pizza/internal/ports"
 	"sync/atomic"
 
@@ -15,6 +18,7 @@ type rabbit struct {
 	conn   *amqp091.Connection
 	// Orderch    *amqp091.Channel
 	connClose  chan *amqp091.Error
+	notifyCh   *amqp091.Channel
 	ordersJobs chan ports.QatJoldama
 	isClosed   atomic.Bool
 }
@@ -41,5 +45,24 @@ func (r *rabbit) GiveChannel() <-chan ports.QatJoldama {
 
 func (r *rabbit) CloseRabbit() error {
 	r.isClosed.Store(true)
+	defer r.logger.Info("rabbit closed")
 	return r.conn.Close()
+}
+
+func (r *rabbit) PublishNotify(ctx context.Context, zat *domain.LogMessageKitchen) error {
+	b, err := json.Marshal(zat)
+	if err != nil {
+		return err
+	}
+	return r.notifyCh.PublishWithContext(
+		ctx,
+		"notifications_fanout",
+		"",
+		false,
+		false,
+		amqp091.Publishing{
+			ContentType: "application/json",
+			Body:        b,
+		},
+	)
 }

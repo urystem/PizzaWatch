@@ -37,7 +37,7 @@ func Main() {
 	}
 
 	start := time.Now()
-	db, err := psql.NewOrderDB(context.Background(), dbCfg)
+	db, err := psql.NewOrderDB(context.Background(), dbCfg, logger)
 	if err != nil {
 		logger.Error("cannot connect to db", "error", err)
 		return
@@ -54,9 +54,9 @@ func Main() {
 	defer rab.CloseRabbit()
 	logger.Info("Connected to RabbitMQ exchange 'orders_topic'", "action", "rabbitmq_connected", "duration_ms", time.Since(start).Milliseconds())
 
-	service := services.NewOrderService(rab, db, *maxCon)
+	service := services.NewOrderService(logger, rab, db, *maxCon)
 	serv := server.NewServer(*port, service)
-	
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 

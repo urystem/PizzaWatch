@@ -8,23 +8,13 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: urystem
       RABBITMQ_DEFAULT_PASS: admin123
-  # builder:
-  #   image: golang:1.24.4-alpine3.22
-  #   working_dir: /app
-  #   volumes:
-  #     - .:/app       # текущая папка хоста монтируется в /app
-  #   command: >
-  #     sh -c "CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w -extldflags \"-static\"' -o rss cmd/main.go"      
-  # rss:
-  #   build: 
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     POSTGRES_HOST: db
-  #   env_file:
-  #     - .env
-  #   entrypoint: ["/app/rss", "fetch"]
-  #   depends_on:
-  #     - migrate
+  builder:
+    image: golang:1.24.4-alpine3.22
+    working_dir: /app
+    volumes:
+      - .:/app       # текущая папка хоста монтируется в /app
+    command: >
+      sh -c "CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w -extldflags \"-static\"' -o pizza cmd/main.go"
   db:
     image: postgres:alpine3.22
     container_name: rss_db

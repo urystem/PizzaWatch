@@ -2,20 +2,23 @@ package services
 
 import (
 	"context"
+	"log/slog"
 	"pizza/internal/domain"
 	"pizza/internal/ports"
 	"time"
 )
 
 type order struct {
+	logg   *slog.Logger
 	rabbit ports.OrderRabbit
 	db     ports.OrderPsql
 	sem    chan struct{} //concurent
 
 }
 
-func NewOrderService(rabbit ports.OrderRabbit, db ports.OrderPsql, maxConcurrent uint) ports.OrderUseCase {
+func NewOrderService(logg *slog.Logger, rabbit ports.OrderRabbit, db ports.OrderPsql, maxConcurrent uint) ports.OrderUseCase {
 	return &order{
+		logg:   logg,
 		db:     db,
 		rabbit: rabbit,
 		sem:    make(chan struct{}, maxConcurrent),
@@ -23,6 +26,7 @@ func NewOrderService(rabbit ports.OrderRabbit, db ports.OrderPsql, maxConcurrent
 }
 
 func (u *order) CreateOrder(ctx context.Context, ord *domain.Order) (*domain.OrderStatus, error) {
+	u.logg.Debug("receiving request", "action", "request_received")
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

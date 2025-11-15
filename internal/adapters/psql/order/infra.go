@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"pizza/internal/config"
 	"pizza/internal/ports"
 
@@ -10,10 +11,11 @@ import (
 )
 
 type psql struct {
+	logg *slog.Logger
 	*pgxpool.Pool
 }
 
-func NewOrderDB(ctx context.Context, cfg config.CfgDBInter) (ports.OrderPsql, error) {
+func NewOrderDB(ctx context.Context, cfg config.CfgDBInter, logg *slog.Logger) (ports.OrderPsql, error) {
 	dsn := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%d/%s",
 		cfg.GetUser(),
@@ -27,9 +29,13 @@ func NewOrderDB(ctx context.Context, cfg config.CfgDBInter) (ports.OrderPsql, er
 	if err != nil {
 		return nil, err
 	}
-	return &psql{db}, db.Ping(ctx)
+	return &psql{
+		Pool: db,
+		logg: logg,
+	}, db.Ping(ctx)
 }
 
 func (pool *psql) CloseDB() {
 	pool.Close()
+	pool.logg.Info("db connection closed")
 }

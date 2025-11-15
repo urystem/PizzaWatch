@@ -8,6 +8,7 @@ import (
 func CustomSlog() *slog.Logger {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		// AddSource: true,
+		Level: slog.LevelDebug,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 
 			// time -> timestamp
