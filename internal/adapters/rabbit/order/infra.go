@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync/atomic"
+	"time"
+
 	"pizza/internal/config"
 	"pizza/internal/domain"
 	"pizza/internal/ports"
-	"sync/atomic"
-	"time"
 
 	"github.com/rabbitmq/amqp091-go"
 )

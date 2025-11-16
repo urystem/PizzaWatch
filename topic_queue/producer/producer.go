@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	
 	conn, err := amqp091.Dial("amqp://urystem:admin123@localhost:5672/")
 	if err != nil {
 		fmt.Println(err)
@@ -45,7 +44,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	err = ch.QueueBind(q.Name, ""/*"#"*/, "topic_ex", false, nil)
+	err = ch.QueueBind(q.Name, "" /*"#"*/, "topic_ex", false, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +78,7 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
-	//егер ол жақта ешқандай queue болмаса хат автоматты түрде өшіп кетеді
+	// егер ол жақта ешқандай queue болмаса хат автоматты түрде өшіп кетеді
 	messages := map[string]string{
 		"order.new":           "New order received",
 		"order.cancel":        "Order cancelled",

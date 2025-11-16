@@ -3,6 +3,7 @@ package tracing
 import (
 	"context"
 	"errors"
+
 	"pizza/internal/domain"
 
 	"github.com/jackc/pgx/v5"
@@ -36,6 +37,7 @@ func (p *psql) OrderStatusUpdate(ctx context.Context, number string) (*domain.Or
 
 	return &o, nil
 }
+
 func (p *psql) GetOrderHistory(ctx context.Context, number string) ([]domain.OrderStatusEvent, error) {
 	var events []domain.OrderStatusEvent
 

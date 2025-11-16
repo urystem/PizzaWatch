@@ -28,16 +28,15 @@ func main() {
 		false,           // no-wait
 		nil,             // arguments
 	)
-
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	q, err := ch.QueueDeclare(
-		"ddd",    // name
+		"ddd", // name
 		true,  // durable
 		false, // delete when unused
-		false,  // exclusive
+		false, // exclusive
 		false, // no-wait
 		nil,   // arguments
 	)

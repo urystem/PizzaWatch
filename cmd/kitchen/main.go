@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
+	"syscall"
+
 	psql "pizza/internal/adapters/psql/kitchen"
 	rabb "pizza/internal/adapters/rabbit/kitchen"
 	"pizza/internal/config"
 	"pizza/internal/services"
 	"pizza/pkg"
-	"strings"
-	"syscall"
 )
 
 var (

@@ -3,16 +3,17 @@ package services
 import (
 	"context"
 	"log/slog"
+	"time"
+
 	"pizza/internal/domain"
 	"pizza/internal/ports"
-	"time"
 )
 
 type order struct {
 	logg   *slog.Logger
 	rabbit ports.OrderRabbit
 	db     ports.OrderPsql
-	sem    chan struct{} //concurent
+	sem    chan struct{} // concurent
 
 }
 

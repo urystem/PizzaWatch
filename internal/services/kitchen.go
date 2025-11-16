@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
+
 	"pizza/internal/domain"
 	"pizza/internal/ports"
-	"time"
 )
 
 type kitchen struct {
@@ -61,7 +62,6 @@ func (u *kitchen) StartWork() {
 }
 
 func (u *kitchen) worker(job ports.QatJoldama) error {
-
 	order, err := job.GiveBody()
 	if err != nil {
 		return job.Joi()
@@ -121,7 +121,6 @@ func (u *kitchen) worker(job ports.QatJoldama) error {
 		}
 		err = u.db.AddOrderProcessed(u.ctx, u.name)
 		if err != nil {
-
 			return job.Qaitar()
 		}
 		u.slogger.Debug("order processing", "action", "order_completed", "order_number", order.OrderNumber)
@@ -129,7 +128,7 @@ func (u *kitchen) worker(job ports.QatJoldama) error {
 		loggNoti.Level = "INFO"
 		loggNoti.Action = fmt.Sprintf("ack the order : %s", order.OrderNumber)
 		loggNoti.Message = "the order is ready"
-		loggNoti.Details.NewStatus="ready"
+		loggNoti.Details.NewStatus = "ready"
 		defer u.rabbit.PublishNotify(u.ctx, loggNoti)
 		return errors.Join(err, job.Rastau())
 	}

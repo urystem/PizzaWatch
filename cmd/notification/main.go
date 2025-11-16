@@ -4,11 +4,12 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"syscall"
+
 	rabb "pizza/internal/adapters/rabbit/notify"
 	"pizza/internal/config"
 	"pizza/internal/services"
 	"pizza/pkg"
-	"syscall"
 )
 
 func Main() {

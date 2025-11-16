@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
+
 	psql "pizza/internal/adapters/psql/tracing"
 	srv "pizza/internal/adapters/server/tracing"
 	"pizza/internal/config"
 	"pizza/internal/services"
 	"pizza/pkg"
-	"syscall"
 )
 
 func Main() {

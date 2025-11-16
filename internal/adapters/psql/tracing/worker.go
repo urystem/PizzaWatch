@@ -2,13 +2,14 @@ package tracing
 
 import (
 	"context"
+
 	"pizza/internal/domain"
 )
 
 func (p *psql) GetWorkers(ctx context.Context, heartbeatInterval uint) ([]domain.WorkerStatus, error) {
 	// Порог для offline в секундах (например, 2 * heartbeatInterval)
 	// const heartbeatInterval = 10 // сек
-	var offlineThreshold = 2 * heartbeatInterval
+	offlineThreshold := 2 * heartbeatInterval
 
 	rows, err := p.Query(ctx, `
         SELECT name, 

@@ -3,10 +3,11 @@ package notify
 import (
 	"fmt"
 	"log/slog"
-	"pizza/internal/config"
-	"pizza/internal/ports"
 	"sync/atomic"
 	"time"
+
+	"pizza/internal/config"
+	"pizza/internal/ports"
 
 	"github.com/rabbitmq/amqp091-go"
 )

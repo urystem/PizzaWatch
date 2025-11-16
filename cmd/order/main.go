@@ -7,14 +7,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
+	"time"
+
 	psql "pizza/internal/adapters/psql/order"
 	rabbit "pizza/internal/adapters/rabbit/order"
 	server "pizza/internal/adapters/server/order"
 	"pizza/internal/config"
 	"pizza/internal/services"
 	"pizza/pkg"
-	"syscall"
-	"time"
 )
 
 func Main() {

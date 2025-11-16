@@ -10,7 +10,6 @@ func CustomSlog() *slog.Logger {
 		// AddSource: true,
 		Level: slog.LevelDebug,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-
 			// time -> timestamp
 			if a.Key == slog.TimeKey {
 				return slog.String("timestamp", a.Value.Time().Format("2006-01-02T15:04:05Z07:00"))

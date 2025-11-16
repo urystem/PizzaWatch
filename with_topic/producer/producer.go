@@ -20,23 +20,22 @@ func main() {
 	}
 	err = ch.ExchangeDeclare(
 		"topic_example", // name
-		"topic",          // type
-		true,             // durable
-		false,            // auto-deleted
-		false,            // internal
-		false,            // no-wait
-		nil,              // arguments
+		"topic",         // type
+		true,            // durable
+		false,           // auto-deleted
+		false,           // internal
+		false,           // no-wait
+		nil,             // arguments
 	)
-
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	err = ch.Publish(
 		"topic_example", // exchange
-		"black",          // routing key
-		false,            // mandatory
-		false,            // immediate
+		"black",         // routing key
+		false,           // mandatory
+		false,           // immediate
 		amqp091.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte("joq"),

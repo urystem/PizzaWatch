@@ -26,4 +26,3 @@ type Details struct {
 	OrderNumber string `json:"order_number"`
 	NewStatus   string `json:"new_status"`
 }
-

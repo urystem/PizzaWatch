@@ -3,8 +3,9 @@ package order
 import (
 	"context"
 	"fmt"
-	"pizza/internal/domain"
 	"time"
+
+	"pizza/internal/domain"
 )
 
 func (p *psql) CreateOrder(ctx context.Context, ord *domain.OrderPublish) error {

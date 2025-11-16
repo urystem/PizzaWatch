@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync/atomic"
+
 	"pizza/internal/config"
 	"pizza/internal/domain"
 	"pizza/internal/ports"
-	"sync/atomic"
 
 	"github.com/rabbitmq/amqp091-go"
 )
